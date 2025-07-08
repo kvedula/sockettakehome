@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Status{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="text-center mb-4">
+            <h2><i class="fas fa-search"></i> Scan Status</h2>
+            <p class="text-muted">Scan ID: {{ scan_id }}</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div id="scan-status" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Initializing scan...</p>
+                </div>
+
+                <div id="scan-complete" class="text-center d-none">
+                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Scan Complete!</h4>
+                    <div class="mt-3">
+                        <a href="{{ url_for('scan_results_view', scan_id=scan_id) }}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Results
+                        </a>
+                        <a href="{{ url_for('download_results', scan_id=scan_id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-download"></i> Download JSON
+                        </a>
+                    </div>
+                </div>
+
+                <div id="scan-error" class="text-center d-none">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Scan Error</h4>
+                    <p id="error-message" class="text-danger"></p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-home"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scanId = "{{ scan_id }}";
+const statusElement = document.getElementById('scan-status');
+const completeElement = document.getElementById('scan-complete');
+const errorElement = document.getElementById('scan-error');
+const errorMessage = document.getElementById('error-message');
+
+function checkScanStatus() {
+    fetch(`/api/scan/${scanId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'running') {
+                statusElement.querySelector('p').textContent = data.progress || 'Scanning...';
+                setTimeout(checkScanStatus, 1000);
+            } else if (data.status === 'completed') {
+                statusElement.classList.add('d-none');
+                completeElement.classList.remove('d-none');
+            } else if (data.status === 'error') {
+                statusElement.classList.add('d-none');
+                errorElement.classList.remove('d-none');
+                errorMessage.textContent = data.error || 'Unknown error occurred';
+            } else if (data.status === 'not_found') {
+                statusElement.classList.add('d-none');
+                errorElement.classList.remove('d-none');
+                errorMessage.textContent = 'Scan not found';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking scan status:', error);
+            setTimeout(checkScanStatus, 2000);
+        });
+}
+
+// Start checking status
+checkScanStatus();
+</script>
+{% endblock %}

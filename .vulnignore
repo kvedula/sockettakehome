@@ -1,0 +1,8 @@
+# Vulnerability ignore file
+# Add CVE IDs or vulnerability IDs to ignore specific advisories
+# Example:
+# CVE-2021-23337
+# GHSA-35jh-r3h4-6jhm
+
+# Ignore this specific advisory for testing
+GHSA-example-1234

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Results - {{ report.scan_info.file_scanned }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-poll"></i> Scan Results</h2>
+            <div>
+                <a href="{{ url_for('download_results', scan_id=scan_id) }}" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> Download JSON
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Scan
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Scan Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong><i class="fas fa-file-alt"></i> File:</strong> {{ report.scan_info.file_scanned }}</p>
+                        <p><strong><i class="fas fa-cogs"></i> Ecosystem:</strong> {{ report.scan_info.ecosystem }}</p>
+                        <p><strong><i class="fas fa-clock"></i> Timestamp:</strong> {{ report.scan_info.timestamp | replace('T', ' ') | slice(0, 19) }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong><i class="fas fa-list-ol"></i> Total Dependencies:</strong> {{ report.scan_info.total_dependencies }}</p>
+                        <p><strong><i class="fas fa-exclamation-triangle text-danger"></i> Vulnerable Packages:</strong> {{ report.scan_info.vulnerable_packages }}</p>
+                        <p><strong><i class="fas fa-bug text-warning"></i> Total Vulnerabilities:</strong> {{ report.scan_info.total_vulnerabilities }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong><i class="fas fa-tools text-info"></i> Unmaintained Packages:</strong> {{ report.scan_info.unmaintained_packages }}</p>
+                        <p><strong><i class="fas fa-filter text-muted"></i> Ignored Advisories:</strong> {{ report.scan_info.ignored_advisories }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h6>Severity Breakdown</h6>
+                    <div class="progress">
+                        {% set breakdown = report.summary.severity_breakdown %}
+                        {% for severity, count in breakdown.items() %}
+                            {% if count > 0 %}
+                                <div class="progress-bar bg-{{ severity.lower() }}" role="progressbar"
+                                     style="width: {{ (count / report.scan_info.total_vulnerabilities * 100) if report.scan_info.total_vulnerabilities > 0 else 0 }}%" 
+                                     title="{{ severity }}: {{ count }}"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-center mt-2">
+                        {% for severity, count in breakdown.items() %}
+                            {% if count > 0 %}
+                                <span class="badge bg-{{ severity.lower() }} me-2">{{ severity }}: {{ count }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if report.vulnerabilities %}
+            <div class="mt-4">
+                <h3><i class="fas fa-bug text-warning"></i> Vulnerabilities Found</h3>
+                {% for pkg, vulns in report.vulnerabilities | group_by('affected_package.name') %}
+                    <div class="card my-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">📦 {{ pkg }} ({{ vulns[0].affected_package.version }})</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for vuln in vulns %}
+                                {% set severity = vuln.database_specific.severity if vuln.database_specific and vuln.database_specific.severity else 'Unknown' %}
+                                <div class="card vulnerability-card {{ severity.lower() }}">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ vuln.id }}</h6>
+                                        <p class="card-text">{{ vuln.summary }}</p>
+                                        <p><strong>Severity:</strong> <span class="severity-{{ severity.lower() }}">{{ severity }}</span></p>
+                                        {% if vuln.references %}
+                                            <p class="mb-1"><strong>References:</strong></p>
+                                            <ul>
+                                                {% for ref in vuln.references[:2] %}
+                                                    <li><a href="{{ ref.url }}" target="_blank">{{ ref.url }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if report.unmaintained_packages %}
+            <div class="mt-4">
+                <h3><i class="fas fa-tools text-info"></i> Unmaintained Packages</h3>
+                <ul class="list-group">
+                    {% for pkg in report.unmaintained_packages %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pkg.package }}</strong> ({{ pkg.ecosystem }})
+                            </div>
+                            <span class="badge bg-warning rounded-pill">
+                                Last release: {{ pkg.last_release }} ({{ pkg.days_ago }} days ago)
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Dependency Scanner - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="text-center mb-5">
+            <h1><i class="fas fa-shield-alt text-primary"></i> Dependency Scanner</h1>
+            <p class="lead">Scan your project dependencies for security vulnerabilities and maintenance issues</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload"></i> Upload Dependency File
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select dependency file:</label>
+                        <input type="file" class="form-control" id="file" name="file" required
+                               accept=".txt,.json,.lock">
+                        <div class="form-text">
+                            Supported files: requirements.txt, package.json, package-lock.json, yarn.lock
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ignore_file" class="form-label">Ignore file path (optional):</label>
+                                <input type="text" class="form-control" id="ignore_file" name="ignore_file" 
+                                       value=".vulnignore" placeholder=".vulnignore">
+                                <div class="form-text">
+                                    Path to file containing advisories to ignore
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maintenance_months" class="form-label">Maintenance threshold (months):</label>
+                                <input type="number" class="form-control" id="maintenance_months" name="maintenance_months" 
+                                       value="12" min="1" max="60">
+                                <div class="form-text">
+                                    Flag packages with no releases in X months
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="skip_maintenance" name="skip_maintenance">
+                            <label class="form-check-label" for="skip_maintenance">
+                                Skip maintenance status check
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Start Scan
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h3>Features</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-globe text-primary"></i> Multi-Ecosystem Support
+                            </h5>
+                            <p class="card-text">
+                                Supports both Python (requirements.txt) and JavaScript (package.json) ecosystems
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-bug text-warning"></i> Vulnerability Detection
+                            </h5>
+                            <p class="card-text">
+                                Checks dependencies against OSV.dev database for known security vulnerabilities
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-tools text-success"></i> Maintenance Check
+                            </h5>
+                            <p class="card-text">
+                                Identifies unmaintained packages based on last release date
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-filter text-info"></i> Advisory Filtering
+                            </h5>
+                            <p class="card-text">
+                                Suppress specific advisories using an ignore file
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
